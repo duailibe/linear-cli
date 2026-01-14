@@ -1,0 +1,36 @@
+version: 2
+
+project_name: linear
+
+builds:
+  - id: linear
+    main: ./cmd/linear
+    binary: linear
+    ldflags:
+      - -s -w
+      - -X github.com/duailibe/linear-cli/internal/cli.version={{.Tag}}
+      - -X github.com/duailibe/linear-cli/internal/cli.commit={{.ShortCommit}}
+      - -X github.com/duailibe/linear-cli/internal/cli.date={{.Date}}
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  name_template: "{{ .Version }}-next"
+
+changelog:
+  sort: asc

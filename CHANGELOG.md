@@ -1,0 +1,10 @@
+# Changelog
+
+## v0.1.0 (2026-01-15)
+
+- Full issue workflow: list, view, create, update, close, reopen, and comment from the command line.
+- Powerful filtering: by team, assignee, state, labels, project, cycle, priority, or title search.
+- Issue dependencies: create and manage blocks/blocked-by relationships.
+- Attachment downloads: fetch attachments from issues and comments to local files.
+- Script-friendly: `--json` output everywhere, stdin support for descriptions and comments.
+- Simple auth: store your API key with `linear auth login` or use `LINEAR_API_KEY`.

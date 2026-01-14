@@ -1,0 +1,43 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - depguard
+    - durationcheck
+    - errcheck
+    - errorlint
+    - govet
+    - ineffassign
+    - misspell
+    - nilerr
+    - noctx
+    - staticcheck
+    - unused
+
+  settings:
+    depguard:
+      rules:
+        main:
+          list-mode: lax
+          files:
+            - $all
+          deny:
+            - pkg: io/ioutil
+              desc: "deprecated; use io or os"
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+
+  exclusions:
+    rules:
+      - linters:
+          - errcheck
+        text: 'Error return value of `fmt\.Fprint'
+      - linters:
+          - errcheck
+        text: 'Error return value of .*\.Close'
