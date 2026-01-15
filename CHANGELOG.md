@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## v0.2.0 (2026-01-15)
 
 - Simplify CLI, drop schema cache and API URL configuration
