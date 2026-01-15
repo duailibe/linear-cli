@@ -38,3 +38,7 @@ Testing
 - `make` defaults to `build`; use `make build` explicitly for clarity.
 - Linting: `make lint` (golangci-lint).
 - Test files follow `*_test.go` convention alongside source files.
+
+Commits
+- Use conventional commits: `type(scope): message` (e.g., `feat(issue): add search flag`, `fix(auth): handle expired tokens`).
+- Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
