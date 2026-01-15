@@ -33,17 +33,6 @@ The client in `internal/linear`:
 - Normalizes the auth token and attaches it to requests.
 - Maps common HTTP failures to `ErrUnauthorized`, `ErrNotFound`, and `ErrRateLimited`.
 
-## Schema caching
-
-The CLI introspects the Linear GraphQL schema and caches it to keep compatibility
-with API changes:
-
-- Cache location: `~/.local/share/linear/schema.json` (or XDG_DATA_HOME)
-- Refresh interval: 24 hours
-- If refresh fails, the last cached schema is used
-
-The cache also stores type field information used by query builders.
-
 ## Output layer
 
 Output is minimal and deterministic:

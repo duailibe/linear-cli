@@ -129,7 +129,6 @@ output.
 --no-input      Disable interactive prompts
 --yes, -y       Auto-confirm prompts
 --timeout       API request timeout (default 10s)
---api-url       Custom GraphQL endpoint
 --api-key       API key (overrides env/stored auth)
 --version       Print version and exit
 ```
@@ -379,25 +378,6 @@ Stored credentials live in:
 - `~/.local/share/linear/auth.json` otherwise
 
 The file is created with restrictive permissions.
-
-### Schema cache
-
-The CLI caches GraphQL schema introspection to improve compatibility and resilience.
-The cache file is stored alongside auth data:
-
-- `$XDG_DATA_HOME/linear/schema.json` when XDG_DATA_HOME is set
-- `~/.local/share/linear/schema.json` otherwise
-
-The cache is refreshed every 24 hours when possible. If a refresh fails, the last
-known cache is used.
-
-### API endpoint
-
-Override the GraphQL endpoint with:
-
-```bash
-linear --api-url "https://api.linear.app/graphql" issue list --team ENG
-```
 
 ### Request timeout
 

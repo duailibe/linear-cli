@@ -5,5 +5,5 @@ in the root README.
 
 ## Start here
 
-- Architecture: how the CLI is wired and how schema caching works in architecture.md
+- Architecture: how the CLI is wired in architecture.md
 - Development: build, test, and release notes in development.md

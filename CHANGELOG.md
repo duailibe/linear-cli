@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Simplify CLI, drop schema cache and API URL configuration
+
 ## v0.1.0 (2026-01-15)
 
 - Full issue workflow: list, view, create, update, close, reopen, and comment from the command line.

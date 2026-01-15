@@ -16,7 +16,7 @@ type Dependencies struct {
 	Err       io.Writer
 	Now       func() time.Time
 	AuthStore *auth.Store
-	NewClient func(apiURL, token string, timeout time.Duration) linear.API
+	NewClient func(token string, timeout time.Duration) linear.API
 }
 
 type GlobalOptions struct {
@@ -27,7 +27,6 @@ type GlobalOptions struct {
 	NoInput bool          `name:"no-input" help:"disable interactive prompts"`
 	Yes     bool          `short:"y" help:"assume yes for confirmations"`
 	Timeout time.Duration `help:"API request timeout" default:"10s"`
-	APIURL  string        `name:"api-url" help:"Linear GraphQL API URL" default:"https://api.linear.app/graphql"`
 	APIKey  string        `name:"api-key" help:"Linear API key (overrides env and stored auth)"`
 }
 

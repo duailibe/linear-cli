@@ -40,5 +40,5 @@ func (c *commandContext) apiClient() (linear.API, error) {
 	if c.deps.NewClient == nil {
 		return nil, fmt.Errorf("no API client configured")
 	}
-	return c.deps.NewClient(c.global.APIURL, key, c.global.Timeout), nil
+	return c.deps.NewClient(key, c.global.Timeout), nil
 }

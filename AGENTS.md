@@ -8,7 +8,7 @@ Project overview
 Code layout and responsibilities
 - `cmd/linear/main.go`: entry point, calls `cli.Execute()`.
 - `internal/cli/`: command definitions (auth, issue, cycle, team, whoami), output formatting, context wiring, and error handling.
-- `internal/linear/`: GraphQL client, queries/mutations, schema cache. Owns API shapes and CLI-friendly struct translations.
+- `internal/linear/`: GraphQL client, queries/mutations. Owns API shapes and CLI-friendly struct translations.
 - `internal/auth/`: API key storage and retrieval (file-based, XDG-compliant).
 
 Key patterns
@@ -24,9 +24,8 @@ Versioning
 - Use semantic versioning (e.g., `v0.1.0`).
 
 Runtime behavior and configuration
-- Global flags: `--json`, `--no-color`, `--quiet/-q`, `--verbose/-v`, `--no-input`, `--yes/-y`, `--timeout`, `--api-url`, `--api-key`.
+- Global flags: `--json`, `--no-color`, `--quiet/-q`, `--verbose/-v`, `--no-input`, `--yes/-y`, `--timeout`, `--api-key`.
 - Auth precedence: `--api-key` flag → `LINEAR_API_KEY` env → stored token (`~/.local/share/linear/auth.json`).
-- Schema cached at `~/.local/share/linear/schema.json` for resilience.
 - Default API endpoint: `https://api.linear.app/graphql`.
 
 Output expectations

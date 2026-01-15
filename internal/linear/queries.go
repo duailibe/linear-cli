@@ -2,7 +2,6 @@ package linear
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -168,18 +167,18 @@ func (c *Client) ResolveUserID(ctx context.Context, value string) (string, error
 }
 
 func (c *Client) WorkflowStates(ctx context.Context, teamID string) ([]WorkflowState, error) {
-	query := `query($id: ID!) {
+	query := `query($id: String!) {
   team(id: $id) {
-    workflowStates {
+    states {
       nodes { id name type }
     }
   }
 }`
 	var resp struct {
 		Team *struct {
-			WorkflowStates struct {
+			States struct {
 				Nodes []WorkflowState `json:"nodes"`
-			} `json:"workflowStates"`
+			} `json:"states"`
 		} `json:"team"`
 	}
 	if err := c.do(ctx, query, map[string]any{"id": teamID}, &resp); err != nil {
@@ -188,7 +187,7 @@ func (c *Client) WorkflowStates(ctx context.Context, teamID string) ([]WorkflowS
 	if resp.Team == nil {
 		return nil, ErrNotFound
 	}
-	return resp.Team.WorkflowStates.Nodes, nil
+	return resp.Team.States.Nodes, nil
 }
 
 func (c *Client) ResolveStateID(ctx context.Context, teamID, value string) (string, error) {
@@ -286,13 +285,9 @@ func (c *Client) ResolveCycleID(ctx context.Context, teamID, value string) (stri
 }
 
 func (c *Client) ResolveIssueID(ctx context.Context, value string) (string, error) {
-	argType := "String"
-	if t, ok := c.schemaArgBaseType(ctx, "issue", "id"); ok {
-		argType = t
-	}
-	query := fmt.Sprintf(`query($id: %s!) {
+	query := `query($id: String!) {
   issue(id: $id) { id }
-}`, argType)
+}`
 	var resp struct {
 		Issue *struct {
 			ID string `json:"id"`
@@ -308,11 +303,7 @@ func (c *Client) ResolveIssueID(ctx context.Context, value string) (string, erro
 }
 
 func (c *Client) Issue(ctx context.Context, value string) (IssueDetail, error) {
-	argType := "String"
-	if t, ok := c.schemaArgBaseType(ctx, "issue", "id"); ok {
-		argType = t
-	}
-	query := fmt.Sprintf(`query($id: %s!) {
+	query := `query($id: String!) {
   issue(id: $id) {
     id
     identifier
@@ -329,7 +320,7 @@ func (c *Client) Issue(ctx context.Context, value string) (IssueDetail, error) {
     project { name }
     labels { nodes { name } }
   }
-}`, argType)
+}`
 	var resp struct {
 		Issue *struct {
 			ID          string `json:"id"`
@@ -409,47 +400,13 @@ func (c *Client) Issue(ctx context.Context, value string) (IssueDetail, error) {
 }
 
 func (c *Client) IssueComments(ctx context.Context, issueID string, limit int) ([]Comment, error) {
-	if !c.schemaHasField(ctx, "issue", "comments") {
-		return nil, ErrNotFound
-	}
-
-	bodyField := ""
-	if c.schemaHasField(ctx, "comment", "body") {
-		bodyField = "body"
-	} else if c.schemaHasField(ctx, "comment", "bodyData") {
-		bodyField = "bodyData"
-	}
-
-	userName := c.schemaHasField(ctx, "user", "name")
-	userEmail := c.schemaHasField(ctx, "user", "email")
-
-	selection := []string{"id", "createdAt"}
-	if bodyField != "" {
-		selection = append(selection, bodyField)
-	}
-	if userName || userEmail {
-		userFields := []string{}
-		if userName {
-			userFields = append(userFields, "name")
-		}
-		if userEmail {
-			userFields = append(userFields, "email")
-		}
-		selection = append(selection, fmt.Sprintf("user { %s }", strings.Join(userFields, " ")))
-	}
-
-	argType := "String"
-	if t, ok := c.schemaArgBaseType(ctx, "issue", "id"); ok {
-		argType = t
-	}
-
-	query := fmt.Sprintf(`query($id: %s!, $first: Int) {
+	query := `query($id: String!, $first: Int) {
   issue(id: $id) {
     comments(first: $first) {
-      nodes { %s }
+      nodes { id body bodyData createdAt user { name email } }
     }
   }
-}`, argType, strings.Join(selection, " "))
+}`
 
 	var resp struct {
 		Issue *struct {
@@ -484,12 +441,8 @@ func (c *Client) IssueComments(ctx context.Context, issueID string, limit int) (
 		comment := Comment{
 			ID:        node.ID,
 			CreatedAt: node.CreatedAt,
-		}
-		switch bodyField {
-		case "body":
-			comment.Body = node.Body
-		case "bodyData":
-			comment.BodyData = node.BodyData
+			Body:      node.Body,
+			BodyData:  node.BodyData,
 		}
 		if node.User != nil {
 			comment.UserName = node.User.Name
@@ -501,46 +454,25 @@ func (c *Client) IssueComments(ctx context.Context, issueID string, limit int) (
 }
 
 func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int) ([]Attachment, error) {
-	attachFieldName := "attachments"
-	attachField, ok := c.schemaField(ctx, "issue", attachFieldName)
-	if !ok {
-		attachFieldName = "formerAttachments"
-		attachField, ok = c.schemaField(ctx, "issue", attachFieldName)
-	}
-	if !ok {
-		return nil, ErrNotFound
-	}
-
-	selection, err := c.buildAttachmentSelection(ctx, attachFieldName, attachField.Type, limit)
-	if err != nil {
-		return nil, err
-	}
-
-	argType := "String"
-	if t, ok := c.schemaArgBaseType(ctx, "issue", "id"); ok {
-		argType = t
-	}
-
-	var query string
-	if limit > 0 {
-		query = fmt.Sprintf(`query($id: %s!, $first: Int) {
+	query := `query($id: String!, $first: Int) {
   issue(id: $id) {
-    %s
+    attachments(first: $first) {
+      nodes { id title url source createdAt }
+    }
   }
-}`, argType, selection)
-	} else {
-		query = fmt.Sprintf(`query($id: %s!) {
-  issue(id: $id) {
-    %s
-  }
-}`, argType, selection)
-	}
+}`
 
 	var resp struct {
 		Issue *struct {
-			Attachment  json.RawMessage `json:"attachment"`
-			Attachments json.RawMessage `json:"attachments"`
-			Former      json.RawMessage `json:"formerAttachments"`
+			Attachments struct {
+				Nodes []struct {
+					ID        string `json:"id"`
+					Title     string `json:"title"`
+					URL       string `json:"url"`
+					Source    string `json:"source"`
+					CreatedAt string `json:"createdAt"`
+				} `json:"nodes"`
+			} `json:"attachments"`
 		} `json:"issue"`
 	}
 
@@ -555,27 +487,17 @@ func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int
 		return nil, ErrNotFound
 	}
 
-	raw := resp.Issue.Attachments
-	if attachFieldName == "attachment" {
-		raw = resp.Issue.Attachment
-	}
-	if attachFieldName == "formerAttachments" {
-		raw = resp.Issue.Former
-	}
-	nodes := decodeAttachmentNodes(raw)
-	attachments := make([]Attachment, 0, len(nodes))
-	for _, item := range nodes {
+	attachments := make([]Attachment, 0, len(resp.Issue.Attachments.Nodes))
+	for _, item := range resp.Issue.Attachments.Nodes {
 		url := item.URL
 		if url == "" {
 			url = item.Source
 		}
 		attachments = append(attachments, Attachment{
-			ID:          item.ID,
-			Title:       item.Title,
-			URL:         url,
-			FileName:    item.FileName,
-			ContentType: item.MimeType,
-			CreatedAt:   item.CreatedAt,
+			ID:        item.ID,
+			Title:     item.Title,
+			URL:       url,
+			CreatedAt: item.CreatedAt,
 		})
 	}
 
@@ -590,30 +512,12 @@ func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int
 }
 
 func (c *Client) IssueRelations(ctx context.Context, issueID string, limit int) (IssueRelationSet, error) {
-	hasRelations := c.schemaHasField(ctx, "issue", "relations")
-	hasInverse := c.schemaHasField(ctx, "issue", "inverseRelations")
-	if !hasRelations && !hasInverse {
-		return IssueRelationSet{}, ErrNotFound
-	}
-
-	argType := "String"
-	if t, ok := c.schemaArgBaseType(ctx, "issue", "id"); ok {
-		argType = t
-	}
-
-	selection := []string{}
-	if hasRelations {
-		selection = append(selection, "relations(first: $first) { nodes { id type issue { id } relatedIssue { id } } }")
-	}
-	if hasInverse {
-		selection = append(selection, "inverseRelations(first: $first) { nodes { id type issue { id } relatedIssue { id } } }")
-	}
-
-	query := fmt.Sprintf(`query($id: %s!, $first: Int) {
+	query := `query($id: String!, $first: Int) {
   issue(id: $id) {
-    %s
+    relations(first: $first) { nodes { id type issue { id } relatedIssue { id } } }
+    inverseRelations(first: $first) { nodes { id type issue { id } relatedIssue { id } } }
   }
-}`, argType, strings.Join(selection, " "))
+}`
 
 	type relationNode struct {
 		ID    string `json:"id"`
@@ -735,117 +639,6 @@ func (c *Client) IssueRelationDelete(ctx context.Context, relationID string) err
 		return fmt.Errorf("relation delete failed")
 	}
 	return nil
-}
-
-type attachmentNode struct {
-	ID        string `json:"id"`
-	Title     string `json:"title"`
-	URL       string `json:"url"`
-	Source    string `json:"source"`
-	FileName  string `json:"fileName"`
-	MimeType  string `json:"mimeType"`
-	CreatedAt string `json:"createdAt"`
-}
-
-func decodeAttachmentNodes(raw json.RawMessage) []attachmentNode {
-	if len(raw) == 0 {
-		return nil
-	}
-	var container struct {
-		Nodes []attachmentNode `json:"nodes"`
-		Edges []struct {
-			Node attachmentNode `json:"node"`
-		} `json:"edges"`
-	}
-	if err := json.Unmarshal(raw, &container); err == nil {
-		if len(container.Nodes) > 0 {
-			return container.Nodes
-		}
-		if len(container.Edges) > 0 {
-			nodes := make([]attachmentNode, 0, len(container.Edges))
-			for _, edge := range container.Edges {
-				nodes = append(nodes, edge.Node)
-			}
-			return nodes
-		}
-	}
-	var list []attachmentNode
-	if err := json.Unmarshal(raw, &list); err == nil && len(list) > 0 {
-		return list
-	}
-	var single attachmentNode
-	if err := json.Unmarshal(raw, &single); err == nil && single.ID != "" {
-		return []attachmentNode{single}
-	}
-	return nil
-}
-
-func (c *Client) buildAttachmentSelection(ctx context.Context, fieldName string, fieldType schemaGQLType, limit int) (string, error) {
-	base := fieldType.baseName()
-	if base == "" {
-		return "", ErrNotFound
-	}
-
-	selectionFields := func(typeName string) ([]string, bool) {
-		fields := []string{}
-		candidates := []string{"id", "title", "url", "source", "fileName", "mimeType", "createdAt"}
-		for _, candidate := range candidates {
-			if c.schemaHasField(ctx, typeName, candidate) {
-				fields = append(fields, candidate)
-			}
-		}
-		if len(fields) == 0 {
-			return nil, false
-		}
-		return fields, true
-	}
-
-	if strings.HasSuffix(base, "Connection") {
-		fieldWithArgs := fieldName
-		if limit > 0 {
-			fieldWithArgs = fmt.Sprintf("%s(first: $first)", fieldName)
-		}
-		nodeType, mode, ok := c.connectionNodeType(ctx, base)
-		if !ok {
-			return "", ErrNotFound
-		}
-		fields, ok := selectionFields(nodeType)
-		if !ok {
-			return "", ErrNotFound
-		}
-		if mode == "edges" {
-			return fmt.Sprintf("%s { edges { node { %s } } }", fieldWithArgs, strings.Join(fields, " ")), nil
-		}
-		return fmt.Sprintf("%s { nodes { %s } }", fieldWithArgs, strings.Join(fields, " ")), nil
-	}
-
-	fields, ok := selectionFields(base)
-	if !ok {
-		return "", ErrNotFound
-	}
-	return fmt.Sprintf("%s { %s }", fieldName, strings.Join(fields, " ")), nil
-}
-
-func (c *Client) connectionNodeType(ctx context.Context, connectionType string) (string, string, bool) {
-	if field, ok := c.schemaField(ctx, connectionType, "nodes"); ok {
-		name := field.Type.baseName()
-		if name != "" {
-			return name, "nodes", true
-		}
-	}
-	if field, ok := c.schemaField(ctx, connectionType, "edges"); ok {
-		edgeType := field.Type.baseName()
-		if edgeType == "" {
-			return "", "", false
-		}
-		if nodeField, ok := c.schemaField(ctx, edgeType, "node"); ok {
-			name := nodeField.Type.baseName()
-			if name != "" {
-				return name, "edges", true
-			}
-		}
-	}
-	return "", "", false
 }
 
 func extractAttachmentsFromComments(comments []Comment) []Attachment {
@@ -1052,8 +845,19 @@ func (c *Client) IssueCreate(ctx context.Context, input map[string]any) (IssueSu
 }
 
 func (c *Client) IssueUpdate(ctx context.Context, input map[string]any) (IssueSummary, error) {
-	query := `mutation($input: IssueUpdateInput!) {
-  issueUpdate(input: $input) {
+	id, _ := input["id"].(string)
+	if id == "" {
+		return IssueSummary{}, errors.New("issue id is required")
+	}
+	trimmed := map[string]any{}
+	for key, value := range input {
+		if key == "id" {
+			continue
+		}
+		trimmed[key] = value
+	}
+	query := `mutation($id: String!, $input: IssueUpdateInput!) {
+  issueUpdate(id: $id, input: $input) {
     issue { id identifier title url }
   }
 }`
@@ -1062,7 +866,7 @@ func (c *Client) IssueUpdate(ctx context.Context, input map[string]any) (IssueSu
 			Issue *IssueSummary `json:"issue"`
 		} `json:"issueUpdate"`
 	}
-	if err := c.do(ctx, query, map[string]any{"input": input}, &resp); err != nil {
+	if err := c.do(ctx, query, map[string]any{"id": id, "input": trimmed}, &resp); err != nil {
 		return IssueSummary{}, err
 	}
 	if resp.IssueUpdate.Issue == nil {

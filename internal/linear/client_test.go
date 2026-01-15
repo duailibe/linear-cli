@@ -15,7 +15,11 @@ func TestUnauthorized(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	client := NewClient(srv.URL, "token", time.Second)
+	client := &Client{
+		apiURL: srv.URL,
+		token:  "token",
+		http:   &http.Client{Timeout: time.Second},
+	}
 	_, err := client.Me(context.Background())
 	if !errors.Is(err, ErrUnauthorized) {
 		t.Fatalf("expected ErrUnauthorized, got %v", err)

@@ -9,7 +9,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -48,11 +47,6 @@ type Client struct {
 	apiURL string
 	token  string
 	http   *http.Client
-
-	schemaPath  string
-	schemaOnce  sync.Once
-	schemaCache *schemaCache
-	schemaErr   error
 }
 
 type gqlRequest struct {
@@ -91,15 +85,15 @@ func (e gqlErrors) hasUnknownField(field string) bool {
 	return false
 }
 
-func NewClient(apiURL, token string, timeout time.Duration) API {
-	schemaPath, _ := DefaultSchemaPath()
+const defaultAPIURL = "https://api.linear.app/graphql"
+
+func NewClient(token string, timeout time.Duration) API {
 	return &Client{
-		apiURL: apiURL,
+		apiURL: defaultAPIURL,
 		token:  token,
 		http: &http.Client{
 			Timeout: timeout,
 		},
-		schemaPath: schemaPath,
 	}
 }
 
@@ -166,77 +160,4 @@ func normalizeToken(token string) string {
 		return strings.TrimSpace(trimmed[7:])
 	}
 	return trimmed
-}
-
-func (c *Client) schemaArgBaseType(ctx context.Context, fieldName, argName string) (string, bool) {
-	c.schemaOnce.Do(func() {
-		cache, err := c.loadSchema(ctx)
-		if err != nil {
-			c.schemaErr = err
-			return
-		}
-		c.schemaCache = cache
-	})
-	if c.schemaCache == nil {
-		return "", false
-	}
-	return c.schemaCache.argBaseType(fieldName, argName)
-}
-
-func (c *Client) schemaHasField(ctx context.Context, typeName, fieldName string) bool {
-	c.schemaOnce.Do(func() {
-		cache, err := c.loadSchema(ctx)
-		if err != nil {
-			c.schemaErr = err
-			return
-		}
-		c.schemaCache = cache
-	})
-	if c.schemaCache == nil {
-		return false
-	}
-	if c.schemaCache.hasField(typeName, fieldName) {
-		return true
-	}
-	info, ok, err := c.loadSchemaType(ctx, typeName)
-	if err != nil || !ok {
-		return false
-	}
-	return info.hasField(fieldName)
-}
-
-func (info schemaTypeInfo) hasField(fieldName string) bool {
-	for _, field := range info.Fields {
-		if strings.EqualFold(field.Name, fieldName) {
-			return true
-		}
-	}
-	return false
-}
-
-func (c *Client) schemaField(ctx context.Context, typeName, fieldName string) (schemaField, bool) {
-	c.schemaOnce.Do(func() {
-		cache, err := c.loadSchema(ctx)
-		if err != nil {
-			c.schemaErr = err
-			return
-		}
-		c.schemaCache = cache
-	})
-	if c.schemaCache == nil {
-		return schemaField{}, false
-	}
-	if field, ok := c.schemaCache.field(typeName, fieldName); ok {
-		return field, true
-	}
-	info, ok, err := c.loadSchemaType(ctx, typeName)
-	if err != nil || !ok {
-		return schemaField{}, false
-	}
-	for _, field := range info.Fields {
-		if strings.EqualFold(field.Name, fieldName) {
-			return field, true
-		}
-	}
-	return schemaField{}, false
 }
