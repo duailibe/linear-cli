@@ -33,4 +33,4 @@ snapshot:
   name_template: "{{ .Version }}-next"
 
 changelog:
-  sort: asc
+  disable: true

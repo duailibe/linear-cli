@@ -43,3 +43,7 @@ Commits
 - Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
 - After any user-facing changes in the code, check if README.md, SKILL.md, and docs/ also need to be updated.
 - Keep docs/ up to date when commands, flags, or outputs change.
+
+Releasing
+- Ensure notable changes are listed under `## Unreleased` in `CHANGELOG.md`.
+- Run `scripts/release.sh vX.Y.Z` to cut a release (updates changelog, commits, tags, and pushes).
