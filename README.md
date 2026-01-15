@@ -118,6 +118,14 @@ linear issue list --team ENG --json | jq '.nodes[].identifier'
 --api-key       API key (overrides env/stored auth)
 ```
 
+## AI Coding Agents
+
+This repo includes a SKILL file for AI coding agents. Install it with:
+
+```bash
+npx add-skill duailibe/linear-cli
+```
+
 ## Development
 
 ```bash
