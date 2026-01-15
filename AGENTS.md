@@ -42,3 +42,4 @@ Testing
 Commits
 - Use conventional commits: `type(scope): message` (e.g., `feat(issue): add search flag`, `fix(auth): handle expired tokens`).
 - Common types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`.
+- After any user-facing changes in the code, check if README.md and SKILL.md also need to be updated.
