@@ -16,6 +16,25 @@ make test
 go test ./...
 ```
 
+## Smoke tests
+
+Smoke tests run the CLI against the Linear API using a playground key. Each run
+creates a new issue and updates it to validate the update flow.
+
+Required:
+
+- `LINEAR_API_KEY`
+- `LINEAR_SMOKE_TEAM`
+
+Optional:
+
+
+Run them with:
+
+```bash
+scripts/smoke_test.sh
+```
+
 ## Lint
 
 ```bash

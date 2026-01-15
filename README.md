@@ -467,6 +467,25 @@ npx add-skill duailibe/linear-cli
 go test ./...
 ```
 
+## Smoke tests
+
+Smoke tests run the CLI against a playground workspace. Each run creates a new
+issue and updates it to validate the update flow.
+
+Required environment variables:
+
+- `LINEAR_API_KEY` (playground API key)
+- `LINEAR_SMOKE_TEAM` (team key, for example `DUA`)
+
+Optional environment variables:
+
+
+Run:
+
+```bash
+scripts/smoke_test.sh
+```
+
 ## License
 
 MIT
