@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.2.1 (2026-01-16)
 
 ### Changed
 - Attachment downloads now fail if no unique filename is available (after 99 attempts) instead of risking an overwrite.
