@@ -708,30 +708,19 @@ func parseUploadsLinks(text string) []Attachment {
 func preferredFileName(title, urlStr string) string {
 	title = strings.TrimSpace(title)
 	if title != "" && strings.Contains(title, ".") {
-		return sanitizeFileName(title)
+		return title
 	}
 	parsed, err := url.Parse(urlStr)
 	if err == nil {
 		base := path.Base(parsed.Path)
 		if base != "." && base != "/" && base != "" {
-			return sanitizeFileName(base)
+			return base
 		}
 	}
 	if title != "" {
-		return sanitizeFileName(title)
+		return title
 	}
 	return "attachment"
-}
-
-func sanitizeFileName(name string) string {
-	name = strings.TrimSpace(name)
-	name = strings.ReplaceAll(name, "\\", "_")
-	name = strings.ReplaceAll(name, "/", "_")
-	name = strings.ReplaceAll(name, ":", "_")
-	if name == "" {
-		return "attachment"
-	}
-	return name
 }
 
 var (
