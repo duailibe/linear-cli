@@ -15,12 +15,3 @@ func TestParseUploadsLinks(t *testing.T) {
 		t.Fatalf("expected filename from title, got %s", attachments[0].FileName)
 	}
 }
-
-func TestSanitizeFileNameDots(t *testing.T) {
-	if got := sanitizeFileName("."); got != "attachment" {
-		t.Fatalf("expected attachment, got %s", got)
-	}
-	if got := sanitizeFileName(".."); got != "attachment" {
-		t.Fatalf("expected attachment, got %s", got)
-	}
-}

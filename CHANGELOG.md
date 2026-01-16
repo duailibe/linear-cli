@@ -5,7 +5,7 @@
 ### Changed
 - Attachment downloads now fail if no unique filename is available (after 99 attempts) instead of risking an overwrite.
 - `linear auth status` now reports API key configuration (not authentication).
-- Attachment filename sanitization now guards against `.` and `..` to avoid directory traversal.
+- Attachment filename sanitization now guards against `.` and `..` to avoid directory traversal (sanitized at download time only).
 
 ## v0.2.0 (2026-01-15)
 
