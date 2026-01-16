@@ -22,10 +22,29 @@ func TestUniquePathSkipsExisting(t *testing.T) {
 		t.Fatalf("write file-1: %v", err)
 	}
 
-	got := uniquePath(base, false)
+	got, err := uniquePath(base, false)
+	if err != nil {
+		t.Fatalf("uniquePath error: %v", err)
+	}
 	want := filepath.Join(dir, "file-2.txt")
 	if got != want {
 		t.Fatalf("expected %s, got %s", want, got)
+	}
+}
+
+func TestUniquePathLimitExceeded(t *testing.T) {
+	dir := t.TempDir()
+	base := filepath.Join(dir, "file.txt")
+	if err := os.WriteFile(base, []byte("a"), 0o644); err != nil {
+		t.Fatalf("write base: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "file-1.txt"), []byte("a"), 0o644); err != nil {
+		t.Fatalf("write file-1: %v", err)
+	}
+
+	_, err := uniquePathWithLimit(base, false, 1)
+	if err == nil {
+		t.Fatalf("expected error")
 	}
 }
 

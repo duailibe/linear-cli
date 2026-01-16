@@ -54,7 +54,10 @@ func (c *IssueAttachmentsCmd) Run(ctx context.Context, cmdCtx *commandContext) e
 			continue
 		}
 		name := attachmentFileName(attachment)
-		path := uniquePath(filepath.Join(dir, name), c.Overwrite)
+		path, err := uniquePath(filepath.Join(dir, name), c.Overwrite)
+		if err != nil {
+			return exitError(1, err)
+		}
 		if err := downloadToFile(ctx, attachment.URL, path, apiKey, cmdCtx.global.Timeout); err != nil {
 			return exitError(1, err)
 		}
@@ -109,21 +112,28 @@ func sanitizeFileName(name string) string {
 	return name
 }
 
-func uniquePath(path string, overwrite bool) string {
+const maxUniquePathAttempts = 10000
+
+func uniquePath(path string, overwrite bool) (string, error) {
+	return uniquePathWithLimit(path, overwrite, maxUniquePathAttempts)
+}
+
+func uniquePathWithLimit(path string, overwrite bool, maxAttempts int) (string, error) {
 	if overwrite {
-		return path
+		return path, nil
 	}
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
-		return path
+		return path, nil
 	}
 	ext := filepath.Ext(path)
 	base := strings.TrimSuffix(path, ext)
-	for i := 1; ; i++ {
+	for i := 1; i <= maxAttempts; i++ {
 		candidate := fmt.Sprintf("%s-%d%s", base, i, ext)
 		if _, err := os.Stat(candidate); errors.Is(err, os.ErrNotExist) {
-			return candidate
+			return candidate, nil
 		}
 	}
+	return "", fmt.Errorf("unable to find unique path after %d attempts", maxAttempts)
 }
 
 func downloadToFile(ctx context.Context, urlStr, path, apiKey string, timeout time.Duration) (err error) {
