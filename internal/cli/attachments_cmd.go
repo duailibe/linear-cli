@@ -118,16 +118,15 @@ func uniquePath(path string, overwrite bool) string {
 	}
 	ext := filepath.Ext(path)
 	base := strings.TrimSuffix(path, ext)
-	for i := 1; i < 1000; i++ {
+	for i := 1; ; i++ {
 		candidate := fmt.Sprintf("%s-%d%s", base, i, ext)
 		if _, err := os.Stat(candidate); errors.Is(err, os.ErrNotExist) {
 			return candidate
 		}
 	}
-	return path
 }
 
-func downloadToFile(ctx context.Context, urlStr, path, apiKey string, timeout time.Duration) error {
+func downloadToFile(ctx context.Context, urlStr, path, apiKey string, timeout time.Duration) (err error) {
 	parsed, err := url.Parse(urlStr)
 	if err != nil {
 		return fmt.Errorf("invalid url: %w", err)
@@ -149,16 +148,21 @@ func downloadToFile(ctx context.Context, urlStr, path, apiKey string, timeout ti
 		return fmt.Errorf("download failed: %s", resp.Status)
 	}
 
-	tmp := path + ".tmp"
-	file, err := os.Create(tmp)
+	tmpFile, err := os.CreateTemp(filepath.Dir(path), ".linear-attachment-*")
 	if err != nil {
 		return err
 	}
-	if _, err := io.Copy(file, resp.Body); err != nil {
-		_ = file.Close()
+	tmp := tmpFile.Name()
+	defer func() {
+		if err != nil {
+			_ = os.Remove(tmp)
+		}
+	}()
+	if _, err = io.Copy(tmpFile, resp.Body); err != nil {
+		_ = tmpFile.Close()
 		return err
 	}
-	if err := file.Close(); err != nil {
+	if err = tmpFile.Close(); err != nil {
 		return err
 	}
 	return os.Rename(tmp, path)
