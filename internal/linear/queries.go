@@ -728,7 +728,7 @@ func sanitizeFileName(name string) string {
 	name = strings.ReplaceAll(name, "\\", "_")
 	name = strings.ReplaceAll(name, "/", "_")
 	name = strings.ReplaceAll(name, ":", "_")
-	if name == "" {
+	if name == "" || name == "." || name == ".." {
 		return "attachment"
 	}
 	return name

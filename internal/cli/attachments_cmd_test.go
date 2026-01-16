@@ -72,3 +72,12 @@ func TestDownloadToFileCleansTempOnError(t *testing.T) {
 		}
 	}
 }
+
+func TestSanitizeFileNameDots(t *testing.T) {
+	if got := sanitizeFileName("."); got != "attachment" {
+		t.Fatalf("expected attachment, got %s", got)
+	}
+	if got := sanitizeFileName(".."); got != "attachment" {
+		t.Fatalf("expected attachment, got %s", got)
+	}
+}
