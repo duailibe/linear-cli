@@ -112,13 +112,7 @@ func sanitizeFileName(name string) string {
 	return name
 }
 
-const maxUniquePathAttempts = 10000
-
 func uniquePath(path string, overwrite bool) (string, error) {
-	return uniquePathWithLimit(path, overwrite, maxUniquePathAttempts)
-}
-
-func uniquePathWithLimit(path string, overwrite bool, maxAttempts int) (string, error) {
 	if overwrite {
 		return path, nil
 	}
@@ -127,13 +121,13 @@ func uniquePathWithLimit(path string, overwrite bool, maxAttempts int) (string, 
 	}
 	ext := filepath.Ext(path)
 	base := strings.TrimSuffix(path, ext)
-	for i := 1; i <= maxAttempts; i++ {
+	for i := 1; i <= 99; i++ {
 		candidate := fmt.Sprintf("%s-%d%s", base, i, ext)
 		if _, err := os.Stat(candidate); errors.Is(err, os.ErrNotExist) {
 			return candidate, nil
 		}
 	}
-	return "", fmt.Errorf("unable to find unique path after %d attempts", maxAttempts)
+	return "", fmt.Errorf("unable to find unique path")
 }
 
 func downloadToFile(ctx context.Context, urlStr, path, apiKey string, timeout time.Duration) (err error) {
