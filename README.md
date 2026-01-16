@@ -40,7 +40,7 @@ Or store it locally:
 linear auth login
 ```
 
-Check that authentication is working:
+Check which API key source is configured (use `whoami` to verify):
 
 ```bash
 linear auth status
@@ -67,7 +67,7 @@ linear cycle view        View cycle details
 linear team list         List teams
 
 linear auth login        Store API key
-linear auth status       Check auth status
+linear auth status       Show API key configuration
 linear auth logout       Remove stored credentials
 
 linear whoami            Show current user
@@ -155,7 +155,8 @@ linear auth login --api-key "$LINEAR_API_KEY"
 
 #### `linear auth status`
 
-Check whether an API key is available and report its source.
+Show whether an API key is configured and report its source.
+This does not verify the key; use `linear whoami` to validate access.
 
 ```bash
 linear auth status
@@ -173,7 +174,7 @@ linear auth logout
 
 #### `linear whoami`
 
-Print the authenticated Linear user.
+Print the authenticated Linear user (verifies API key access).
 
 ```bash
 linear whoami
