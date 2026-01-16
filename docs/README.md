@@ -5,5 +5,5 @@ in the root README.
 
 ## Start here
 
-- Architecture: how the CLI is wired in architecture.md
+- Architecture: detailed spec for CLI structure, commands, and API behavior in architecture.md
 - Development: build, test, and release notes in development.md

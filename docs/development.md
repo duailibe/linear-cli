@@ -18,20 +18,23 @@ go test ./...
 
 ## Smoke tests
 
-Smoke tests run the CLI against the Linear API using a playground key. Each run
-creates a new issue and updates it to validate the update flow.
+Smoke tests run the CLI against the Linear API. Each run creates a new issue and
+updates it to validate the update flow.
 
-Required:
+Requirements:
 
+- `jq` in `$PATH`
 - `LINEAR_API_KEY`
-- `LINEAR_SMOKE_TEAM`
+- `LINEAR_SMOKE_TEAM` (team key, e.g. `DUA`)
 
 Optional:
 
+- `LINEAR_SMOKE_PREFIX` (defaults to `${TEAM}-`)
 
 Run them with:
 
 ```bash
+make build
 scripts/smoke_test.sh
 ```
 
