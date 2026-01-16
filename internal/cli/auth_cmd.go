@@ -13,7 +13,7 @@ import (
 
 type AuthCmd struct {
 	Login  AuthLoginCmd  `cmd:"" help:"Store a Linear API key"`
-	Status AuthStatusCmd `cmd:"" help:"Show authentication status"`
+	Status AuthStatusCmd `cmd:"" help:"Show API key configuration"`
 	Logout AuthLogoutCmd `cmd:"" help:"Remove stored authentication"`
 }
 
@@ -60,19 +60,22 @@ func (c *AuthLoginCmd) Run(ctx *commandContext) error {
 
 func (c *AuthStatusCmd) Run(ctx *commandContext) error {
 	key, source, err := ctx.resolveAPIKey()
-	authed := err == nil && key != ""
+	configured := err == nil && strings.TrimSpace(key) != ""
+	if !configured {
+		source = "none"
+	}
 	out := outputFor(ctx)
 	if out.JSON {
 		return out.PrintJSON(map[string]any{
-			"authenticated": authed,
-			"source":        source,
+			"configured": configured,
+			"source":     source,
 		})
 	}
-	if authed {
-		_, _ = fmt.Fprintf(ctx.deps.Out, "Authenticated via %s\n", source)
+	if configured {
+		_, _ = fmt.Fprintf(ctx.deps.Out, "API key configured via %s\n", source)
 		return nil
 	}
-	_, _ = fmt.Fprintln(ctx.deps.Out, "Not authenticated")
+	_, _ = fmt.Fprintln(ctx.deps.Out, "No API key configured")
 	return exitError(3, errors.New("no API key configured"))
 }
 
