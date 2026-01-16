@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Changed
+- Attachment downloads now fail if no unique filename is available (after 99 attempts) instead of risking an overwrite.
+
 ## v0.2.0 (2026-01-15)
 
 - Simplify CLI, drop schema cache and API URL configuration
