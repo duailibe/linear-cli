@@ -90,7 +90,6 @@ fi
 # Commit and tag the release
 git add CHANGELOG.md
 git commit -m "release: $version"
-git branch -f main HEAD
 git tag "$version"
 git push origin main
 git push origin "$version"
