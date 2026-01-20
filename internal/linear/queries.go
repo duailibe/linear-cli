@@ -457,7 +457,7 @@ func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int
 	query := `query($id: String!, $first: Int) {
   issue(id: $id) {
     attachments(first: $first) {
-      nodes { id title url source createdAt }
+      nodes { id title url createdAt }
     }
   }
 }`
@@ -469,7 +469,6 @@ func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int
 					ID        string `json:"id"`
 					Title     string `json:"title"`
 					URL       string `json:"url"`
-					Source    string `json:"source"`
 					CreatedAt string `json:"createdAt"`
 				} `json:"nodes"`
 			} `json:"attachments"`
@@ -489,14 +488,10 @@ func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int
 
 	attachments := make([]Attachment, 0, len(resp.Issue.Attachments.Nodes))
 	for _, item := range resp.Issue.Attachments.Nodes {
-		url := item.URL
-		if url == "" {
-			url = item.Source
-		}
 		attachments = append(attachments, Attachment{
 			ID:        item.ID,
 			Title:     item.Title,
-			URL:       url,
+			URL:       item.URL,
 			CreatedAt: item.CreatedAt,
 		})
 	}

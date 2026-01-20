@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Changed
+- Attachment downloads now rely on attachment URLs and ignore attachment source metadata.
+
 ## v0.2.1 (2026-01-16)
 
 ### Changed
