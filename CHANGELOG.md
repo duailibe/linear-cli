@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Fixed
+- Attachment downloads now include uploads linked in the issue description.
+- Attachment downloads now use filenames from attachment body data when available.
+
 ## v0.2.2 (2026-01-20)
 
 ### Changed

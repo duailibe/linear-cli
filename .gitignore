@@ -39,3 +39,6 @@ bin/
 
 # Local tools
 .tools/
+
+# Local context
+.context/

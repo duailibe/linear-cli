@@ -2,6 +2,7 @@ package linear
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -456,6 +457,7 @@ func (c *Client) IssueComments(ctx context.Context, issueID string, limit int) (
 func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int) ([]Attachment, error) {
 	query := `query($id: String!, $first: Int) {
   issue(id: $id) {
+    description
     attachments(first: $first) {
       nodes { id title url createdAt }
     }
@@ -464,6 +466,7 @@ func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int
 
 	var resp struct {
 		Issue *struct {
+			Description string `json:"description"`
 			Attachments struct {
 				Nodes []struct {
 					ID        string `json:"id"`
@@ -487,19 +490,41 @@ func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int
 	}
 
 	attachments := make([]Attachment, 0, len(resp.Issue.Attachments.Nodes))
+	hasAPIAttachments := len(resp.Issue.Attachments.Nodes) > 0
+	seen := map[string]struct{}{}
+	addAttachment := func(item Attachment) {
+		key := item.URL
+		if key == "" {
+			key = item.ID
+		}
+		if key != "" {
+			if _, ok := seen[key]; ok {
+				return
+			}
+			seen[key] = struct{}{}
+		}
+		attachments = append(attachments, item)
+	}
 	for _, item := range resp.Issue.Attachments.Nodes {
-		attachments = append(attachments, Attachment{
+		addAttachment(Attachment{
 			ID:        item.ID,
 			Title:     item.Title,
 			URL:       item.URL,
 			CreatedAt: item.CreatedAt,
 		})
 	}
+	if resp.Issue.Description != "" {
+		for _, item := range parseUploadsLinks(resp.Issue.Description) {
+			addAttachment(item)
+		}
+	}
 
-	if len(attachments) == 0 {
+	if !hasAPIAttachments {
 		comments, err := c.IssueComments(ctx, issueID, limit)
 		if err == nil {
-			attachments = append(attachments, extractAttachmentsFromComments(comments)...)
+			for _, item := range extractAttachmentsFromComments(comments) {
+				addAttachment(item)
+			}
 		}
 	}
 
@@ -640,14 +665,12 @@ func extractAttachmentsFromComments(comments []Comment) []Attachment {
 	seen := map[string]struct{}{}
 	attachments := []Attachment{}
 	for _, comment := range comments {
-		body := comment.Body
-		if body == "" {
-			body = comment.BodyData
-		}
-		if body == "" {
+		items := parseUploadsBodyData(comment.BodyData)
+		items = append(items, parseUploadsLinks(comment.Body)...)
+		if len(items) == 0 {
 			continue
 		}
-		for _, item := range parseUploadsLinks(body) {
+		for _, item := range items {
 			if _, ok := seen[item.URL]; ok {
 				continue
 			}
@@ -700,9 +723,62 @@ func parseUploadsLinks(text string) []Attachment {
 	return out
 }
 
+func parseUploadsBodyData(bodyData string) []Attachment {
+	if bodyData == "" {
+		return nil
+	}
+	var doc map[string]any
+	if err := json.Unmarshal([]byte(bodyData), &doc); err != nil {
+		return nil
+	}
+	urls := map[string]Attachment{}
+	var walk func(node map[string]any)
+	walk = func(node map[string]any) {
+		if node == nil {
+			return
+		}
+		if nodeType, _ := node["type"].(string); nodeType == "file" {
+			if attrs, ok := node["attrs"].(map[string]any); ok {
+				href, _ := attrs["href"].(string)
+				if href != "" {
+					name, _ := attrs["name"].(string)
+					if name == "" {
+						name, _ = attrs["title"].(string)
+					}
+					fileName := strings.TrimSpace(name)
+					if fileName == "" {
+						fileName = preferredFileName("", href)
+					}
+					urls[href] = Attachment{
+						ID:       href,
+						Title:    name,
+						URL:      href,
+						FileName: fileName,
+					}
+				}
+			}
+		}
+		if content, ok := node["content"].([]any); ok {
+			for _, item := range content {
+				child, ok := item.(map[string]any)
+				if !ok {
+					continue
+				}
+				walk(child)
+			}
+		}
+	}
+	walk(doc)
+	out := make([]Attachment, 0, len(urls))
+	for _, item := range urls {
+		out = append(out, item)
+	}
+	return out
+}
+
 func preferredFileName(title, urlStr string) string {
 	title = strings.TrimSpace(title)
-	if title != "" && strings.Contains(title, ".") {
+	if title != "" {
 		return title
 	}
 	parsed, err := url.Parse(urlStr)

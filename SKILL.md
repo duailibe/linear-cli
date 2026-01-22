@@ -85,6 +85,7 @@ linear issue comment ENG-123 --body "Working on this"
 echo "Status update" | linear issue comment ENG-123 --body -
 
 # Download attachments
+# Includes uploads from the issue description and comments.
 linear issue attachments ENG-123 --dir ./downloads
 ```
 

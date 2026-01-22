@@ -197,7 +197,8 @@ Output columns: `ID`, `Title`, `State`, `Assignee`, `Team`, `Cycle`.
 
 - Requests attachments for the issue and downloads them to a directory
   (default: `attachments`).
-- If no attachments are returned by the API, it falls back to parsing
+- Also parses `uploads.linear.app` links in the issue description.
+- If no attachments are returned by the API, it also parses
   `uploads.linear.app` links in comments.
 - File naming:
   - prefers attachment filename/title/url path

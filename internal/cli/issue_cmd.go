@@ -19,7 +19,7 @@ type IssueCmd struct {
 	Close       IssueCloseCmd       `cmd:"" help:"Close an issue"`
 	Reopen      IssueReopenCmd      `cmd:"" help:"Reopen an issue"`
 	Comment     IssueCommentCmd     `cmd:"" help:"Add a comment to an issue"`
-	Attachments IssueAttachmentsCmd `cmd:"" help:"Download issue attachments from comments"`
+	Attachments IssueAttachmentsCmd `cmd:"" help:"Download issue attachments from the issue and comments"`
 }
 
 type IssueListCmd struct {

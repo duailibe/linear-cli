@@ -348,7 +348,7 @@ linear issue comment ENG-123 --body "Working on this"
 
 #### `linear issue attachments`
 
-Download attachments from issue comments.
+Download attachments from the issue description and comments.
 
 ```
 <issue-id>    Issue ID or identifier
