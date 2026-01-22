@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.2.3 (2026-01-22)
 
 ### Fixed
 - Attachment downloads now include uploads linked in the issue description.
