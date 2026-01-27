@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.3.0 (2026-01-27)
 
 ### Changed
 - Renamed the issue download command to `linear issue uploads` and the flag to `--uploads`.
