@@ -159,8 +159,9 @@ Output columns: `ID`, `Title`, `State`, `Assignee`, `Team`, `Cycle`.
 
 - Fetches a single issue with labels, project, and timestamps.
 - `--comments` optionally fetches comments; `--comments-limit` defaults to 20.
-- Human output prints a summary table, then URL, labels, description, and
-  timestamps when present.
+- `--uploads` optionally fetches uploads; `--uploads-limit` defaults to 50.
+- Human output prints a summary table, then URL, labels, description, uploads,
+  and timestamps when present.
 
 #### issue create
 
@@ -193,13 +194,12 @@ Output columns: `ID`, `Title`, `State`, `Assignee`, `Team`, `Cycle`.
 - `--body` accepts `-` to read from stdin; body is required.
 - Returns the new comment ID (JSON) or prints a confirmation line.
 
-#### issue attachments
+#### issue uploads
 
-- Requests attachments for the issue and downloads them to a directory
-  (default: `attachments`).
-- Also parses `uploads.linear.app` links in the issue description.
-- If no attachments are returned by the API, it also parses
-  `uploads.linear.app` links in comments.
+- Requests uploads for the issue and downloads them to a directory
+  (default: `uploads`).
+- Filters to `uploads.linear.app` URLs (non-upload attachments are ignored).
+- Parses `uploads.linear.app` links in the issue description and comments.
 - File naming:
   - prefers attachment filename/title/url path
   - sanitizes path separators and colons

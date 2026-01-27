@@ -15,32 +15,32 @@ import (
 	"github.com/duailibe/linear-cli/internal/linear"
 )
 
-type IssueAttachmentsCmd struct {
+type IssueUploadsCmd struct {
 	IssueID   string `arg:"" name:"issue-id" help:"Issue ID"`
-	Dir       string `help:"Directory to save attachments" default:"attachments"`
+	Dir       string `help:"Directory to save uploads" default:"uploads"`
 	Limit     int    `help:"Maximum number of comments to scan" default:"50"`
 	Overwrite bool   `help:"Overwrite existing files"`
 }
 
-func (c *IssueAttachmentsCmd) Run(ctx context.Context, cmdCtx *commandContext) error {
+func (c *IssueUploadsCmd) Run(ctx context.Context, cmdCtx *commandContext) error {
 	client, err := cmdCtx.apiClient()
 	if err != nil {
 		return exitError(3, err)
 	}
 
-	attachments, err := client.IssueAttachments(ctx, c.IssueID, c.Limit)
+	uploads, err := client.IssueUploads(ctx, c.IssueID, c.Limit)
 	if err != nil {
 		return exitError(mapErrorToExitCode(err), err)
 	}
 
-	if len(attachments) == 0 {
-		_, _ = fmt.Fprintln(cmdCtx.deps.Out, "No attachments found")
+	if len(uploads) == 0 {
+		_, _ = fmt.Fprintln(cmdCtx.deps.Out, "No uploads found")
 		return nil
 	}
 
 	dir := c.Dir
 	if dir == "" {
-		dir = "attachments"
+		dir = "uploads"
 	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return exitError(1, fmt.Errorf("create dir: %w", err))
@@ -48,12 +48,12 @@ func (c *IssueAttachmentsCmd) Run(ctx context.Context, cmdCtx *commandContext) e
 
 	apiKey, _, _ := cmdCtx.resolveAPIKey()
 
-	results := make([]attachmentDownload, 0, len(attachments))
-	for _, attachment := range attachments {
+	results := make([]uploadDownload, 0, len(uploads))
+	for _, attachment := range uploads {
 		if attachment.URL == "" {
 			continue
 		}
-		name := attachmentFileName(attachment)
+		name := uploadFileName(attachment)
 		path, err := uniquePath(filepath.Join(dir, name), c.Overwrite)
 		if err != nil {
 			return exitError(1, err)
@@ -61,7 +61,7 @@ func (c *IssueAttachmentsCmd) Run(ctx context.Context, cmdCtx *commandContext) e
 		if err := downloadToFile(ctx, attachment.URL, path, apiKey, cmdCtx.global.Timeout); err != nil {
 			return exitError(1, err)
 		}
-		results = append(results, attachmentDownload{
+		results = append(results, uploadDownload{
 			Attachment: attachment,
 			Path:       path,
 		})
@@ -78,12 +78,12 @@ func (c *IssueAttachmentsCmd) Run(ctx context.Context, cmdCtx *commandContext) e
 	return out.PrintTable([]string{"ID", "Title", "Path"}, rows)
 }
 
-type attachmentDownload struct {
+type uploadDownload struct {
 	linear.Attachment
 	Path string `json:"path"`
 }
 
-func attachmentFileName(attachment linear.Attachment) string {
+func uploadFileName(attachment linear.Attachment) string {
 	if attachment.FileName != "" {
 		return sanitizeFileName(attachment.FileName)
 	}
@@ -98,7 +98,7 @@ func attachmentFileName(attachment linear.Attachment) string {
 			}
 		}
 	}
-	return fmt.Sprintf("attachment-%s", attachment.ID)
+	return fmt.Sprintf("upload-%s", attachment.ID)
 }
 
 func sanitizeFileName(name string) string {
@@ -107,7 +107,7 @@ func sanitizeFileName(name string) string {
 	name = strings.ReplaceAll(name, "/", "_")
 	name = strings.ReplaceAll(name, ":", "_")
 	if name == "" || name == "." || name == ".." {
-		return "attachment"
+		return "upload"
 	}
 	return name
 }
@@ -152,7 +152,7 @@ func downloadToFile(ctx context.Context, urlStr, path, apiKey string, timeout ti
 		return fmt.Errorf("download failed: %s", resp.Status)
 	}
 
-	tmpFile, err := os.CreateTemp(filepath.Dir(path), ".linear-attachment-*")
+	tmpFile, err := os.CreateTemp(filepath.Dir(path), ".linear-upload-*")
 	if err != nil {
 		return err
 	}

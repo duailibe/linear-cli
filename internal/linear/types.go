@@ -43,22 +43,23 @@ type IssueRelationSet struct {
 }
 
 type IssueDetail struct {
-	ID          string    `json:"id"`
-	Identifier  string    `json:"identifier"`
-	Title       string    `json:"title"`
-	URL         string    `json:"url"`
-	Description string    `json:"description"`
-	Priority    int       `json:"priority"`
-	State       string    `json:"state"`
-	Assignee    string    `json:"assignee"`
-	TeamID      string    `json:"team_id"`
-	TeamKey     string    `json:"team_key"`
-	Cycle       string    `json:"cycle"`
-	Project     string    `json:"project"`
-	Labels      []string  `json:"labels"`
-	Comments    []Comment `json:"comments,omitempty"`
-	CreatedAt   string    `json:"created_at"`
-	UpdatedAt   string    `json:"updated_at"`
+	ID          string       `json:"id"`
+	Identifier  string       `json:"identifier"`
+	Title       string       `json:"title"`
+	URL         string       `json:"url"`
+	Description string       `json:"description"`
+	Priority    int          `json:"priority"`
+	State       string       `json:"state"`
+	Assignee    string       `json:"assignee"`
+	TeamID      string       `json:"team_id"`
+	TeamKey     string       `json:"team_key"`
+	Cycle       string       `json:"cycle"`
+	Project     string       `json:"project"`
+	Labels      []string     `json:"labels"`
+	Comments    []Comment    `json:"comments,omitempty"`
+	Uploads     []Attachment `json:"uploads,omitempty"`
+	CreatedAt   string       `json:"created_at"`
+	UpdatedAt   string       `json:"updated_at"`
 }
 
 type Comment struct {

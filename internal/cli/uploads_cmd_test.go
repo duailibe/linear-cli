@@ -67,17 +67,17 @@ func TestDownloadToFileCleansTempOnError(t *testing.T) {
 		t.Fatalf("read dir: %v", readErr)
 	}
 	for _, entry := range entries {
-		if strings.HasPrefix(entry.Name(), ".linear-attachment-") {
+		if strings.HasPrefix(entry.Name(), ".linear-upload-") {
 			t.Fatalf("expected no temp files, found %s", entry.Name())
 		}
 	}
 }
 
 func TestSanitizeFileNameDots(t *testing.T) {
-	if got := sanitizeFileName("."); got != "attachment" {
-		t.Fatalf("expected attachment, got %s", got)
+	if got := sanitizeFileName("."); got != "upload" {
+		t.Fatalf("expected upload, got %s", got)
 	}
-	if got := sanitizeFileName(".."); got != "attachment" {
-		t.Fatalf("expected attachment, got %s", got)
+	if got := sanitizeFileName(".."); got != "upload" {
+		t.Fatalf("expected upload, got %s", got)
 	}
 }

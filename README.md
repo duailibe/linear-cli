@@ -53,13 +53,13 @@ Credentials are stored at `~/.local/share/linear/auth.json` (respects `$XDG_DATA
 
 ```
 linear issue list        List and filter issues
-linear issue view        View issue details and comments
+linear issue view        View issue details, comments, and uploads
 linear issue create      Create new issues
 linear issue update      Update existing issues
 linear issue close       Close an issue
 linear issue reopen      Reopen a closed issue
 linear issue comment     Add comments
-linear issue attachments Download attachments
+linear issue uploads     Download uploads
 
 linear cycle list        List team cycles
 linear cycle view        View cycle details
@@ -100,10 +100,10 @@ cat spec.md | linear issue create --team ENG --title "New feature" --description
 linear issue comment ENG-123 --body "Fixed in latest deploy"
 ```
 
-**Download all attachments from an issue:**
+**Download uploads from an issue:**
 
 ```bash
-linear issue attachments ENG-456 --dir ./downloads
+linear issue uploads ENG-456 --dir ./downloads
 ```
 
 **Get JSON output for scripting:**
@@ -259,6 +259,8 @@ Flags:
 ```
 --comments          Include comments
 --comments-limit    Maximum number of comments (default 20)
+--uploads           Include uploads
+--uploads-limit     Maximum number of uploads/comments to scan (default 50)
 ```
 
 ```bash
@@ -346,19 +348,19 @@ Add a comment to an issue.
 linear issue comment ENG-123 --body "Working on this"
 ```
 
-#### `linear issue attachments`
+#### `linear issue uploads`
 
-Download attachments from the issue description and comments.
+Download uploads from the issue description and comments (uploads.linear.app only).
 
 ```
 <issue-id>    Issue ID or identifier
---dir         Directory to save attachments (default "attachments")
+--dir         Directory to save uploads (default "uploads")
 --limit       Maximum number of comments to scan (default 50)
 --overwrite   Overwrite existing files
 ```
 
 ```bash
-linear issue attachments ENG-123 --dir ./downloads
+linear issue uploads ENG-123 --dir ./downloads
 ```
 
 ## Configuration
@@ -413,13 +415,13 @@ The default table output includes these columns:
 - `linear issue view`: ID, Title, State, Assignee, Team, Cycle, Project, Priority
 - `linear issue create/update/close/reopen`: ID, Title, URL
 - `linear issue comment`: prints a confirmation line with the new comment ID
-- `linear issue attachments`: ID, Title, Path
+- `linear issue uploads`: ID, Title, Path
 - `linear cycle list/view`: ID, Name, Number, Starts, Ends, Active
 - `linear team list`: ID, Key, Name
 - `linear whoami`: ID, Name, Email
 
 `linear issue view` prints additional lines for URL, labels, description, timestamps,
-and comments (when `--comments` is provided).
+comments (when `--comments` is provided), and uploads (when `--uploads` is provided).
 
 ### JSON shapes
 
@@ -428,7 +430,7 @@ shapes include:
 
 - `IssuePage`: `{ nodes: [IssueSummary], page_info: { has_next_page, end_cursor } }`
 - `CyclePage`: `{ nodes: [Cycle], page_info: { has_next_page, end_cursor } }`
-- `IssueDetail`: detailed issue fields plus optional `comments`
+- `IssueDetail`: detailed issue fields plus optional `comments` and `uploads`
 - `User`, `Team`, and `Cycle` objects with straightforward scalar fields
 - `IssueComment` creation returns `{ id: "..." }`
 

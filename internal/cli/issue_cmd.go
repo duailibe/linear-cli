@@ -19,7 +19,7 @@ type IssueCmd struct {
 	Close       IssueCloseCmd       `cmd:"" help:"Close an issue"`
 	Reopen      IssueReopenCmd      `cmd:"" help:"Reopen an issue"`
 	Comment     IssueCommentCmd     `cmd:"" help:"Add a comment to an issue"`
-	Attachments IssueAttachmentsCmd `cmd:"" help:"Download issue attachments from the issue and comments"`
+	Uploads     IssueUploadsCmd     `cmd:"" help:"Download issue uploads from the issue description and comments"`
 }
 
 type IssueListCmd struct {
@@ -36,9 +36,11 @@ type IssueListCmd struct {
 }
 
 type IssueViewCmd struct {
-	IssueID       string `arg:"" name:"issue-id" help:"Issue ID"`
-	Comments      bool   `help:"Include comments"`
-	CommentsLimit int    `name:"comments-limit" help:"Maximum number of comments" default:"20"`
+	IssueID          string `arg:"" name:"issue-id" help:"Issue ID"`
+	Comments         bool   `help:"Include comments"`
+	CommentsLimit    int    `name:"comments-limit" help:"Maximum number of comments" default:"20"`
+	Uploads          bool   `help:"Include uploads"`
+	UploadsLimit     int    `name:"uploads-limit" help:"Maximum number of uploads/comments to scan" default:"50"`
 }
 
 type IssueCreateCmd struct {
@@ -188,6 +190,13 @@ func (c *IssueViewCmd) Run(ctx context.Context, cmdCtx *commandContext) error {
 		}
 		issue.Comments = comments
 	}
+	if c.Uploads {
+		uploads, err := client.IssueUploads(ctx, issue.ID, c.UploadsLimit)
+		if err != nil {
+			return exitError(mapErrorToExitCode(err), err)
+		}
+		issue.Uploads = uploads
+	}
 	out := outputFor(cmdCtx)
 	if out.JSON {
 		return out.PrintJSON(issue)
@@ -213,6 +222,30 @@ func (c *IssueViewCmd) Run(ctx context.Context, cmdCtx *commandContext) error {
 	}
 	if issue.Description != "" {
 		_, _ = fmt.Fprintf(cmdCtx.deps.Out, "\nDescription:\n%s\n", issue.Description)
+	}
+	if c.Uploads {
+		if len(issue.Uploads) == 0 {
+			_, _ = fmt.Fprintln(cmdCtx.deps.Out, "\nUploads: none")
+		} else {
+			_, _ = fmt.Fprintln(cmdCtx.deps.Out, "\nUploads:")
+			for _, attachment := range issue.Uploads {
+				name := attachment.Title
+				if name == "" {
+					name = attachment.FileName
+				}
+				if name == "" {
+					name = attachment.URL
+				}
+				if name == "" {
+					name = attachment.ID
+				}
+				if attachment.URL != "" && attachment.URL != name {
+					_, _ = fmt.Fprintf(cmdCtx.deps.Out, "- %s (%s)\n", name, attachment.URL)
+				} else {
+					_, _ = fmt.Fprintf(cmdCtx.deps.Out, "- %s\n", name)
+				}
+			}
+		}
 	}
 	if issue.CreatedAt != "" || issue.UpdatedAt != "" {
 		_, _ = fmt.Fprintf(cmdCtx.deps.Out, "\nCreated: %s\nUpdated: %s\n", issue.CreatedAt, issue.UpdatedAt)

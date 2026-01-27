@@ -30,7 +30,7 @@ type API interface {
 	ResolveIssueID(ctx context.Context, value string) (string, error)
 	Issue(ctx context.Context, value string) (IssueDetail, error)
 	IssueComments(ctx context.Context, issueID string, limit int) ([]Comment, error)
-	IssueAttachments(ctx context.Context, issueID string, limit int) ([]Attachment, error)
+	IssueUploads(ctx context.Context, issueID string, limit int) ([]Attachment, error)
 	IssueRelations(ctx context.Context, issueID string, limit int) (IssueRelationSet, error)
 	Issues(ctx context.Context, filter IssueFilter, limit int, after string) (IssuePage, error)
 	IssueCreate(ctx context.Context, input map[string]any) (IssueSummary, error)

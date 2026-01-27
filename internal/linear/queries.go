@@ -454,7 +454,7 @@ func (c *Client) IssueComments(ctx context.Context, issueID string, limit int) (
 	return comments, nil
 }
 
-func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int) ([]Attachment, error) {
+func (c *Client) IssueUploads(ctx context.Context, issueID string, limit int) ([]Attachment, error) {
 	query := `query($id: String!, $first: Int) {
   issue(id: $id) {
     description
@@ -489,10 +489,12 @@ func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int
 		return nil, ErrNotFound
 	}
 
-	attachments := make([]Attachment, 0, len(resp.Issue.Attachments.Nodes))
-	hasAPIAttachments := len(resp.Issue.Attachments.Nodes) > 0
+	uploads := make([]Attachment, 0, len(resp.Issue.Attachments.Nodes))
 	seen := map[string]struct{}{}
 	addAttachment := func(item Attachment) {
+		if !isLinearUploadURL(item.URL) {
+			return
+		}
 		key := item.URL
 		if key == "" {
 			key = item.ID
@@ -503,7 +505,7 @@ func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int
 			}
 			seen[key] = struct{}{}
 		}
-		attachments = append(attachments, item)
+		uploads = append(uploads, item)
 	}
 	for _, item := range resp.Issue.Attachments.Nodes {
 		addAttachment(Attachment{
@@ -519,16 +521,14 @@ func (c *Client) IssueAttachments(ctx context.Context, issueID string, limit int
 		}
 	}
 
-	if !hasAPIAttachments {
-		comments, err := c.IssueComments(ctx, issueID, limit)
-		if err == nil {
-			for _, item := range extractAttachmentsFromComments(comments) {
-				addAttachment(item)
-			}
+	comments, err := c.IssueComments(ctx, issueID, limit)
+	if err == nil {
+		for _, item := range extractAttachmentsFromComments(comments) {
+			addAttachment(item)
 		}
 	}
 
-	return attachments, nil
+	return uploads, nil
 }
 
 func (c *Client) IssueRelations(ctx context.Context, issueID string, limit int) (IssueRelationSet, error) {
@@ -792,6 +792,17 @@ func preferredFileName(title, urlStr string) string {
 		return title
 	}
 	return "attachment"
+}
+
+func isLinearUploadURL(urlStr string) bool {
+	if strings.TrimSpace(urlStr) == "" {
+		return false
+	}
+	parsed, err := url.Parse(urlStr)
+	if err != nil {
+		return false
+	}
+	return strings.EqualFold(parsed.Hostname(), "uploads.linear.app")
 }
 
 var (

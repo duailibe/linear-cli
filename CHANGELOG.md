@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Changed
+- Renamed the issue download command to `linear issue uploads` and the flag to `--uploads`.
+- Upload downloads now default to the `uploads` directory.
+
+### Fixed
+- Upload downloads now include uploads referenced in comments even when the issue already has uploads listed by the API.
+
+### Added
+- `linear issue view` can include uploads with `--uploads`.
+
 ## v0.2.3 (2026-01-22)
 
 ### Fixed
