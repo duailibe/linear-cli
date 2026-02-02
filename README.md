@@ -7,6 +7,12 @@ Built in Go. Works with personal API keys. Plays nice with scripts.
 ## Install
 
 ```bash
+brew install duailibe/tap/linear-cli
+```
+
+Or with Go:
+
+```bash
 go install github.com/duailibe/linear-cli/cmd/linear@latest
 ```
 
